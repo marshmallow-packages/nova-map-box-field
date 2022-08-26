@@ -1,0 +1,10 @@
+/* Nova Field CSS */
+@import "mapbox-gl/dist/mapbox-gl.css";
+@import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+
+#map {
+    /* position: absolute; */
+    /* top: 0; */
+    /* bottom: 0; */
+    width: 100%;
+}
