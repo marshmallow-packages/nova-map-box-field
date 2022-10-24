@@ -34,4 +34,17 @@ class MapBox extends Field
             )->randomId()
             ->hideFromIndex();
     }
+
+    public function defaultPolygon(float $latitude, float $longitude, int $range_in_km): self
+    {
+        $this->withMeta([
+            'default_polygon' => [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'range_in_km' => $range_in_km,
+            ],
+        ]);
+
+        return $this;
+    }
 }
