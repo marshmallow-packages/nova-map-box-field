@@ -60,6 +60,24 @@ trait Options
         return $this;
     }
 
+    public function navigationControls(bool $navigation_controls): self
+    {
+        $this->withMeta([
+            'navigation_controls' => $navigation_controls,
+        ]);
+
+        return $this;
+    }
+
+    public function drawControls(bool $draw_controls): self
+    {
+        $this->withMeta([
+            'draw_controls' => $draw_controls,
+        ]);
+
+        return $this;
+    }
+
     public function height(int $height): self
     {
         $this->withMeta([

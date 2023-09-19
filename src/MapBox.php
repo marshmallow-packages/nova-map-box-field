@@ -26,6 +26,8 @@ class MapBox extends Field
             ->longitude(config('nova-map-box-field.default.longitude'))
             ->style(config('nova-map-box-field.default.style'))
             ->container(config('nova-map-box-field.default.container'))
+            ->navigationControls(config('nova-map-box-field.default.navigation_controls', false))
+            ->drawControls(config('nova-map-box-field.default.draw_controls', false))
             ->polygon()
             ->polygonPreviewColor(config('nova-map-box-field.default.polygon_preview.color'))
             ->polygonPreviewOpacity(config('nova-map-box-field.default.polygon_preview.opacity'))

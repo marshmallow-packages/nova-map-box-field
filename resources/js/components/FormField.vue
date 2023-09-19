@@ -58,8 +58,13 @@ export default {
             center: [this.field.longitude, this.field.latitude],
         });
 
+        if (this.field.navigation_controls) {
+            // Add zoom and rotation controls to the map.
+            this.map.addControl(new mapboxgl.NavigationControl());
+        }
+
         const draw = new MapboxDraw({
-            displayControlsDefault: false,
+            displayControlsDefault: this.field.draw_controls,
             controls: {
                 polygon: true,
                 trash: true,

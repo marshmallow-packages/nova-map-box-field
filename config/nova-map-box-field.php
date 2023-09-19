@@ -9,6 +9,8 @@ return [
         'longitude' => 4.647251,
         'style' => 'mapbox://styles/mapbox/light-v10',
         'container' => 'map',
+        'navigation_controls' => false,
+        'draw_controls' => false,
 
         'polygon_preview' => [
             'color' => '#ff133b',
