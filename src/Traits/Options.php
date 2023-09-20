@@ -122,4 +122,19 @@ trait Options
 
         return $this;
     }
+
+    public function prefillWith(callable $callable): self
+    {
+        $prefill_data = $callable($this);
+        collect($prefill_data)->each(function ($polygon) {
+            if (!$polygon instanceof \Marshmallow\MapBox\Polygon) {
+                throw new \Exception('The prefillWith method expects an array of Polygon objects.');
+            }
+        });
+        $this->withMeta([
+            'prefill_with' => $prefill_data,
+        ]);
+
+        return $this;
+    }
 }

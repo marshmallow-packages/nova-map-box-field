@@ -72,15 +72,39 @@ export default {
             defaultMode: "draw_polygon",
         });
 
+        let prefill_map_with = this.field.prefill_with;
+
         this.map.addControl(draw);
 
         this.map.on("draw.create", updateArea);
         this.map.on("draw.delete", updateArea);
         this.map.on("draw.update", updateArea);
 
+        let self = this;
         this.map.on("load", function () {
             if (field.value) {
                 draw.add(JSON.parse(field.value));
+            }
+
+            if (prefill_map_with) {
+                prefill_map_with.forEach(function (data, index) {
+                    const polygon_id = "polygon_" + index;
+                    self.map.addSource(polygon_id, {
+                        type: "geojson",
+                        data: data.polygon,
+                    });
+
+                    self.map.addLayer({
+                        id: polygon_id,
+                        type: "fill",
+                        source: polygon_id,
+                        layout: {},
+                        paint: {
+                            "fill-color": data.color,
+                            "fill-opacity": data.opacity,
+                        },
+                    });
+                });
             }
         });
 
