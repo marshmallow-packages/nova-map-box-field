@@ -4,10 +4,12 @@ namespace Marshmallow\MapBox;
 
 use Laravel\Nova\Fields\Field;
 use Marshmallow\MapBox\Traits\Options;
+use Laravel\Nova\Fields\SupportsDependentFields;
 
 class MapBox extends Field
 {
     use Options;
+    use SupportsDependentFields;
 
     /**
      * The field's component.

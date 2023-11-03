@@ -1,15 +1,15 @@
 <template>
     <DefaultField
-        :field="field"
+        :field="currentField"
         :errors="errors"
         :show-help-text="showHelpText"
     >
         <template #field>
             <div
                 class="mm-rounded-t-lg mm-border-b border-gray-200"
-                id="map"
+                :id="currentField.attribute + '_map'"
                 :style="{
-                    height: field.height,
+                    height: currentField.height,
                 }"
             ></div>
         </template>
@@ -17,100 +17,129 @@
 </template>
 
 <script>
-import { FormField, HandlesValidationErrors } from "laravel-nova";
-import mapboxgl from "mapbox-gl";
-import MapboxDraw from "@mapbox/mapbox-gl-draw";
+    import { DependentFormField, HandlesValidationErrors } from "laravel-nova";
+    import mapboxgl from "mapbox-gl";
+    import MapboxDraw from "@mapbox/mapbox-gl-draw";
 
-export default {
-    mixins: [FormField, HandlesValidationErrors],
+    export default {
+        mixins: [HandlesValidationErrors, DependentFormField],
 
-    props: ["resourceName", "resourceId", "field"],
+        props: ["resourceName", "resourceId", "field"],
 
-    data: {
-        map: null,
-    },
-
-    methods: {
-        /*
-         * Set the initial, internal value for the field.
-         */
-        setInitialValue() {
-            this.value = this.field.value || "";
+        data: {
+            map: null,
+            polygon_count: 0,
+            prefilled_indexes: [],
         },
 
-        /**
-         * Fill the given FormData object with the field's internal value.
-         */
-        fill(formData) {
-            formData.append(this.field.attribute, this.value || "");
-        },
-    },
+        methods: {
+            onSyncedField() {
+                let i = 0;
 
-    mounted() {
-        let field = this;
+                for (let i = 0; i < this.prefilled_indexes.length; i++) {
+                    let polygon_id = this.prefilled_indexes[i];
+                    if (this.map.getLayer(polygon_id)) this.map.removeLayer(polygon_id);
+                    if (this.map.getSource(polygon_id)) this.map.removeSource(polygon_id);
+                }
 
-        mapboxgl.accessToken = this.field.map_box_public_token;
+                this.prefilled_indexes = [];
 
-        this.map = new mapboxgl.Map({
-            container: this.field.container,
-            style: this.field.style,
-            zoom: this.field.default_zoom,
-            center: [this.field.longitude, this.field.latitude],
-        });
-
-        if (this.field.navigation_controls) {
-            // Add zoom and rotation controls to the map.
-            this.map.addControl(new mapboxgl.NavigationControl());
-        }
-
-        const draw = new MapboxDraw({
-            displayControlsDefault: this.field.draw_controls,
-            controls: {
-                polygon: true,
-                trash: true,
+                this.drawPrefilledPolygons(this.currentField.prefill_with);
             },
-            defaultMode: "draw_polygon",
-        });
+            /*
+             * Set the initial, internal value for the field.
+             */
+            setInitialValue() {
+                this.value = this.currentField.value || "";
+            },
 
-        let prefill_map_with = this.field.prefill_with;
+            /**
+             * Fill the given FormData object with the field's internal value.
+             */
+            fill(formData) {
+                formData.append(this.currentField.attribute, this.value || "");
+            },
 
-        this.map.addControl(draw);
+            drawPrefilledPolygons(prefill_map_with) {
+                if (prefill_map_with) {
+                    let self = this;
+                    prefill_map_with.forEach(function (data, index) {
+                        self.polygon_count++;
+                        let polygon_id = "polygon_" + index;
 
-        this.map.on("draw.create", updateArea);
-        this.map.on("draw.delete", updateArea);
-        this.map.on("draw.update", updateArea);
+                        if (self.prefilled_indexes.includes(polygon_id)) {
+                            return;
+                        }
 
-        let self = this;
-        this.map.on("load", function () {
-            if (field.value) {
-                draw.add(JSON.parse(field.value));
+                        self.prefilled_indexes.push(polygon_id);
+                        self.map.addSource(polygon_id, {
+                            type: "geojson",
+                            data: data.polygon,
+                        });
+
+                        self.map.addLayer({
+                            id: polygon_id,
+                            type: "fill",
+                            source: polygon_id,
+                            layout: {},
+                            paint: {
+                                "fill-color": data.color,
+                                "fill-opacity": data.opacity,
+                            },
+                        });
+                    });
+                }
+            },
+        },
+
+        mounted() {
+            let field = this;
+
+            mapboxgl.accessToken = this.currentField.map_box_public_token;
+
+            this.map = new mapboxgl.Map({
+                container: this.currentField.attribute + "_map",
+                style: this.currentField.style,
+                zoom: this.currentField.default_zoom,
+                center: [
+                    this.currentField.longitude,
+                    this.currentField.latitude,
+                ],
+            });
+
+            if (this.currentField.navigation_controls) {
+                // Add zoom and rotation controls to the map.
+                this.map.addControl(new mapboxgl.NavigationControl());
             }
 
-            if (prefill_map_with) {
-                prefill_map_with.forEach(function (data, index) {
-                    const polygon_id = "polygon_" + index;
-                    self.map.addSource(polygon_id, {
-                        type: "geojson",
-                        data: data.polygon,
-                    });
+            const draw = new MapboxDraw({
+                displayControlsDefault: this.currentField.draw_controls,
+                controls: {
+                    polygon: true,
+                    trash: true,
+                },
+                defaultMode: "draw_polygon",
+            });
 
-                    self.map.addLayer({
-                        id: polygon_id,
-                        type: "fill",
-                        source: polygon_id,
-                        layout: {},
-                        paint: {
-                            "fill-color": data.color,
-                            "fill-opacity": data.opacity,
-                        },
-                    });
-                });
+            this.map.addControl(draw);
+
+            this.map.on("draw.create", updateArea);
+            this.map.on("draw.delete", updateArea);
+            this.map.on("draw.update", updateArea);
+
+            let prefill_map_with = this.currentField.prefill_with;
+            let self = this;
+            this.map.on("load", function () {
+                if (field.value) {
+                    draw.add(JSON.parse(field.value));
+                }
+
+                self.drawPrefilledPolygons(prefill_map_with);
+            });
+
+            function updateArea(e) {
+                field.value = JSON.stringify(draw.getAll());
             }
-        });
-
-        function updateArea(e) {
-            field.value = JSON.stringify(draw.getAll());
-        }
-    },
-};
+        },
+    };
 </script>
