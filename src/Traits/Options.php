@@ -2,6 +2,7 @@
 
 namespace Marshmallow\MapBox\Traits;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 trait Options
@@ -28,6 +29,29 @@ trait Options
     {
         $this->withMeta([
             'longitude' => $longitude,
+        ]);
+
+        return $this;
+    }
+
+    public function setCenter(callable $callable)
+    {
+        [$latitude, $longitude] = $callable($this);
+
+        return $this->latitude($latitude)
+            ->longitude($longitude);
+    }
+
+    public function addMarker(callable $callable)
+    {
+        [$latitude, $longitude] = $callable($this);
+        $markers = Arr::get($this->meta(), 'markers', []);
+        $markers[] = [
+            $latitude, $longitude
+        ];
+
+        $this->withMeta([
+            'markers' => $markers,
         ]);
 
         return $this;

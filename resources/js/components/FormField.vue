@@ -38,8 +38,10 @@
 
                 for (let i = 0; i < this.prefilled_indexes.length; i++) {
                     let polygon_id = this.prefilled_indexes[i];
-                    if (this.map.getLayer(polygon_id)) this.map.removeLayer(polygon_id);
-                    if (this.map.getSource(polygon_id)) this.map.removeSource(polygon_id);
+                    if (this.map.getLayer(polygon_id))
+                        this.map.removeLayer(polygon_id);
+                    if (this.map.getSource(polygon_id))
+                        this.map.removeSource(polygon_id);
                 }
 
                 this.prefilled_indexes = [];
@@ -129,6 +131,13 @@
 
             let prefill_map_with = this.currentField.prefill_with;
             let self = this;
+
+            this.currentField.markers.forEach(function (data, index) {
+                new mapboxgl.Marker()
+                    .setLngLat([data[1], data[0]])
+                    .addTo(self.map);
+            });
+
             this.map.on("load", function () {
                 if (field.value) {
                     draw.add(JSON.parse(field.value));
