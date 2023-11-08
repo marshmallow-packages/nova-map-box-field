@@ -36,18 +36,25 @@ trait Options
 
     public function setCenter(callable $callable)
     {
-        [$latitude, $longitude] = $callable($this);
+        $center = $callable($this);
+        if (!$center) {
+            return $this;
+        }
 
-        return $this->latitude($latitude)
-            ->longitude($longitude);
+        return $this->latitude($center[0])
+            ->longitude($center[1]);
     }
 
     public function addMarker(callable $callable)
     {
-        [$latitude, $longitude] = $callable($this);
+        $marker = $callable($this);
+        if (!$marker) {
+            return $this;
+        }
+
         $markers = Arr::get($this->meta(), 'markers', []);
         $markers[] = [
-            $latitude, $longitude
+            $marker[0], $marker[1]
         ];
 
         $this->withMeta([
