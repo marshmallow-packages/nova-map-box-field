@@ -132,11 +132,13 @@
             let prefill_map_with = this.currentField.prefill_with;
             let self = this;
 
-            this.currentField.markers.forEach(function (data, index) {
-                new mapboxgl.Marker()
+            if (this.currentField.markers) {
+                this.currentField.markers.forEach(function (data, index) {
+                    new mapboxgl.Marker()
                     .setLngLat([data[1], data[0]])
                     .addTo(self.map);
-            });
+                });
+            }
 
             this.map.on("load", function () {
                 if (field.value) {
